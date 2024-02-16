@@ -14,7 +14,7 @@
   <div class="container">
     <h1 class="mt-5 mb-4">International Space Station Tracker</h1>
     <h2>Track the Current Location of the ISS and Learn About Astronauts Onboard</h2>
-    <h3>Real-Time Data Updates Every 5 Seconds</h2>
+    <h3>Real-Time Data Updates Every 5 Seconds</h3> <!-- Fixed typo: Changed </h2> to </h3> -->
     <div id="map"></div>
     <div class="row mt-4">
       <div class="col-md-6">
@@ -70,11 +70,11 @@
 
       // Move ISS function
       function moveISS() {
-        fetch('https://api.open-notify.org/iss-now.json')
+        fetch('https://api.wheretheiss.at/v1/satellites/25544')
           .then(response => response.json())
           .then(data => {
-            var lat = data.iss_position.latitude;
-            var lon = data.iss_position.longitude;
+            var lat = data.latitude;
+            var lon = data.longitude;
             iss.setLatLng([lat, lon]).update();
             circle.setLatLng([lat, lon]).update();
             map.panTo([lat, lon]);
@@ -175,26 +175,23 @@
     }
 
     // Fetch data from People in Space API
-    fetch('https://api.open-notify.org/astros.json')
-      .then(response => response.json())
-      .then(data => {
-        // Display information about each person
-        displayPeople(data.people);
+    $.getJSON('https://api.wheretheiss.at/v1/astros', function(data) {
+      // Display information about each person
+      displayPeople(data.people);
 
-        // Add event listeners for sorting, filtering, and searching
-        document.getElementById('sort').addEventListener('change', () => {
-          applySortFilter(data.people);
-        });
+      // Add event listeners for sorting, filtering, and searching
+      document.getElementById('sort').addEventListener('change', () => {
+        applySortFilter(data.people);
+      });
 
-        document.getElementById('sortOrder').addEventListener('change', () => {
-          applySortFilter(data.people);
-        });
+      document.getElementById('sortOrder').addEventListener('change', () => {
+        applySortFilter(data.people);
+      });
 
-        document.getElementById('search').addEventListener('input', () => {
-          applySortFilter(data.people);
-        });
-      })
-      .catch(error => console.error('Error fetching data:', error));
+      document.getElementById('search').addEventListener('input', () => {
+        applySortFilter(data.people);
+      });
+    });
 
     // Call initMap function when the page is loaded
     window.onload = initMap;
