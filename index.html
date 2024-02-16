@@ -70,7 +70,7 @@
 
       // Move ISS function
       function moveISS() {
-        fetch('https://api.open-notify.org/iss-now.json')
+        fetch('http://api.open-notify.org/iss-now.json')
           .then(response => response.json())
           .then(data => {
             var lat = data.iss_position.latitude;
@@ -109,7 +109,7 @@
 
     // Function to fetch astronaut image from NASA API
     function fetchAstronautImage(astronautName, callback) {
-      fetch(`https://images-api.nasa.gov/search?q=${astronautName}`)
+      fetch(`http://images-api.nasa.gov/search?q=${astronautName}`)
         .then(response => response.json())
         .then(data => {
           if (data.collection.items.length > 0) {
