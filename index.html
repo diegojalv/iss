@@ -175,7 +175,7 @@
     }
 
     // Fetch data from People in Space API
-    $.getJSON('https://api.wheretheiss.at/v1/astros', function(data) {
+    $.getJSON('http://api.open-notify.org/astros.json', function(data) {
       // Display information about each person
       displayPeople(data.people);
 
