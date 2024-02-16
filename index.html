@@ -40,7 +40,7 @@
     <div id="space-people" class="mt-4 row"></div>
   </div>
 
-  <!-- Bootstrap JS and jQuery (optional) -->
+  <!-- Bootstrap JS and jQuery  -->
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -71,7 +71,7 @@
 
       // Move ISS function
       function moveISS() {
-        fetch('http://api.open-notify.org/iss-now.json')
+        fetch('https://api.wheretheiss.at/v1/satellites/25544')
           .then(response => response.json())
           .then(data => {
             var lat = data.latitude;
