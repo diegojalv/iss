@@ -109,7 +109,7 @@
 
     // Function to fetch astronaut image from NASA API
     function fetchAstronautImage(astronautName, callback) {
-      fetch(`http://images-api.nasa.gov/search?q=${astronautName}`)
+      fetch(`https://images-api.nasa.gov/search?q=${astronautName}`)
         .then(response => response.json())
         .then(data => {
           if (data.collection.items.length > 0) {
@@ -175,7 +175,7 @@
     }
 
     // Fetch data from People in Space API
-    fetch('https://api.open-notify.org/astros.json')
+    fetch('http://api.open-notify.org/astros.json')
       .then(response => response.json())
       .then(data => {
         // Display information about each person
