@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>International Space Station Tracker</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="mt-5 mb-4">International Space Station Tracker</h1>
+    <h2>Track the Current Location of the ISS and Learn About Astronauts Onboard</h2>
+    <h3>Real-Time Data Updates Every 5 Seconds</h2>
+    <div id="map"></div>
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="sort">Sort By:</label>
+          <select id="sort" class="form-control">
+            <option value="name">First Name</option>
+            <option value="lastName">Last Name</option>
+          </select>
+        </div>
+        <!-- Toggle button for sorting order -->
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="sortOrder">
+          <label class="form-check-label" for="sortOrder">Descending Order</label>
+        </div>
+        <div class="form-group">
+          <label for="search">Search By Name:</label>
+          <input type="text" id="search" class="form-control" placeholder="Enter astronaut's name">
+        </div>
+      </div>
+    </div>
+    <div id="space-people" class="mt-4 row"></div>
+  </div>
+
+  <!-- Bootstrap JS and jQuery (optional) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Function to initialize the map
+    function initMap() {
+      // Create the map
+      var map = L.map('map').setView([0, 0], 2);
+      
+      // Add the base map layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      
+      // Add ISS marker
+      var iss = L.marker([0, 0]).addTo(map).bindPopup('International Space Station (ISS)');
+
+      // Add circle around ISS
+      var circle = L.circle([0, 0], {
+        color: 'blue',
+        fillColor: '#4285F4',
+        fillOpacity: 0.2,
+        radius: 500000 // 500 km radius
+      }).addTo(map);
+
+      // Move ISS function
+      function moveISS() {
+        fetch('http://api.open-notify.org/iss-now.json')
+          .then(response => response.json())
+          .then(data => {
+            var lat = data.iss_position.latitude;
+            var lon = data.iss_position.longitude;
+            iss.setLatLng([lat, lon]).update();
+            circle.setLatLng([lat, lon]).update();
+            map.panTo([lat, lon]);
+          })
+          .catch(error => console.error('Error fetching ISS location:', error));
+      }
+      
+      // Call moveISS function initially
+      moveISS();
+
+      // Update ISS location every 5 seconds
+      setInterval(moveISS, 5000);
+    }
+
+    // Function to display people information
+    function displayPeople(people) {
+      const spacePeopleDiv = document.getElementById('space-people');
+      spacePeopleDiv.innerHTML = '';
+      people.forEach(person => {
+        spacePeopleDiv.innerHTML += `
+            <div class="col-md-4 mb-3">
+                <div class="card" onclick="showAstronautImage('${person.name}')">
+                    <div class="card-body">
+                        <h5 class="card-title">${person.name}</h5>
+                        <p class="card-text">Craft: ${person.craft}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+      });
+    }
+
+    // Function to fetch astronaut image from NASA API
+    function fetchAstronautImage(astronautName, callback) {
+      fetch(`https://images-api.nasa.gov/search?q=${astronautName}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.collection.items.length > 0) {
+            const imageUrl = data.collection.items[0].links[0].href;
+            callback(imageUrl);
+          } else {
+            // If no image is found, use a placeholder
+            const placeholderImageUrl = 'https://via.placeholder.com/150';
+            callback(placeholderImageUrl);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching astronaut image:', error);
+          // If an error occurs, use a placeholder image
+          const placeholderImageUrl = 'https://via.placeholder.com/150';
+          callback(placeholderImageUrl);
+        });
+    }
+
+    // Function to show astronaut image in modal
+    function showAstronautImage(astronautName) {
+      fetchAstronautImage(astronautName, imageUrl => {
+        const modalHtml = `
+          <div class="modal fade" id="astronautModal" tabindex="-1" role="dialog" aria-labelledby="astronautModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-body">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                  <img src="${imageUrl}" class="modal-image" alt="${astronautName}'s Image">
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Remove existing modal if any
+        $('#astronautModal').remove();
+
+        // Append modal HTML to body and show modal
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        $('#astronautModal').modal('show');
+      });
+    }
+
+    // Function to apply sorting and filtering
+    function applySortFilter(people) {
+      const sortBy = document.getElementById('sort').value;
+      const sortOrder = document.getElementById('sortOrder').checked ? -1 : 1; // -1 for descending, 1 for ascending
+      const searchString = document.getElementById('search').value.toLowerCase();
+      const filteredData = people.filter(person => person.name.toLowerCase().includes(searchString));
+      filteredData.sort((a, b) => {
+        if (sortBy === 'lastName') {
+          const lastNameA = a.name.split(' ')[1];
+          const lastNameB = b.name.split(' ')[1];
+          return sortOrder * lastNameA.localeCompare(lastNameB);
+        } else {
+          return sortOrder * a[sortBy].localeCompare(b[sortBy]);
+        }
+      });
+      displayPeople(filteredData);
+    }
+
+    // Fetch data from People in Space API
+    fetch('http://api.open-notify.org/astros.json')
+      .then(response => response.json())
+      .then(data => {
+        // Display information about each person
+        displayPeople(data.people);
+
+        // Add event listeners for sorting, filtering, and searching
+        document.getElementById('sort').addEventListener('change', () => {
+          applySortFilter(data.people);
+        });
+
+        document.getElementById('sortOrder').addEventListener('change', () => {
+          applySortFilter(data.people);
+        });
+
+        document.getElementById('search').addEventListener('input', () => {
+          applySortFilter(data.people);
+        });
+      })
+      .catch(error => console.error('Error fetching data:', error));
+
+    // Call initMap function when the page is loaded
+    window.onload = initMap;
+  </script>
+</body>
+</html>
